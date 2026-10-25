@@ -1,13 +1,20 @@
 import { grade1 } from './grade1';
 import type { Grade, Translation, Translator } from './types';
 
-/** Registered translators. Grade 2 slots in here when it exists; the UI lists what's available. */
-export const TRANSLATORS: Readonly<Partial<Record<Grade, Translator>>> = {
+/**
+ * Registered translators. Grade 1 is built in; Grade 2 needs liblouis, which the caller loads and
+ * registers with registerTranslator() (see grade2.ts).
+ */
+const TRANSLATORS: Partial<Record<Grade, Translator>> = {
   1: grade1,
 };
 
-export function availableGrades(): Translator[] {
-  return Object.values(TRANSLATORS);
+export function registerTranslator(translator: Translator): void {
+  TRANSLATORS[translator.grade] = translator;
+}
+
+export function hasGrade(grade: Grade): boolean {
+  return TRANSLATORS[grade] !== undefined;
 }
 
 /** Translate print text. Each line of input becomes its own paragraph; blank lines are kept. */

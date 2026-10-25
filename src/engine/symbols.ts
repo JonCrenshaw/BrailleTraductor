@@ -69,6 +69,18 @@ export const INDICATORS = {
     dots: [dotString('56')],
     name: 'Grade 1 sign: the next cell is a letter, not a digit',
   },
+  grade1Word: {
+    dots: [dotString('56'), dotString('56')],
+    name: 'Grade 1 word sign: this word is spelled out, with no contractions',
+  },
+  grade1Passage: {
+    dots: [dotString('56'), dotString('56'), dotString('56')],
+    name: 'Grade 1 passage sign: no contractions until the terminator',
+  },
+  grade1Terminator: {
+    dots: [dotString('56'), dotString('3')],
+    name: 'Grade 1 terminator: contractions resume',
+  },
   numericContinuation: {
     dots: [dotString('5')],
     name: 'Continuation sign: the number continues on the next row',
@@ -100,7 +112,9 @@ export const PUNCTUATION: Readonly<Record<string, SymbolDef>> = {
   '-': sym('hyphen', '36'),
   '‐': sym('hyphen', '36'),
   '–': sym('dash', '6', '36'),
-  '—': sym('long dash', '5', '6', '36'),
+  // UEB writes both print dashes as ⠠⠤; the long dash is for the two-em dash.
+  '—': sym('dash', '6', '36'),
+  '⸺': sym('long dash', '5', '6', '36'),
   '…': sym('ellipsis', '256', '256', '256'),
   '(': sym('opening parenthesis', '5', '126'),
   ')': sym('closing parenthesis', '5', '345'),

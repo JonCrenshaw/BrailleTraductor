@@ -1,7 +1,7 @@
 import './style.css';
 import { toUnicode } from '../engine/cell';
 import { isSpace, layout, MIN_CELLS_PER_ROW, usedLength, type SlateLayout } from '../engine/layout';
-import { availableGrades, translate } from '../engine/translate';
+import { hasGrade, translate } from '../engine/translate';
 import type { Grade } from '../engine/types';
 import { enableGridKeys, enableTooltip, renderSlate, type View } from './render';
 
@@ -12,6 +12,7 @@ const textIn = $<HTMLTextAreaElement>('text');
 const cellsIn = $<HTMLInputElement>('cells');
 const rowsIn = $<HTMLInputElement>('rows');
 const gradeIn = $<HTMLSelectElement>('grade');
+const gradeStatus = $('grade-status');
 const pagesEl = $('pages');
 const summaryEl = $('summary');
 const warningsEl = $('warnings');
@@ -51,19 +52,12 @@ function save(s: Saved): void {
 
 // ---- Form setup ----
 
-for (const t of availableGrades()) gradeIn.add(new Option(t.label, String(t.grade)));
-if (availableGrades().every((t) => t.grade !== 2)) {
-  const soon = new Option('Grade 2 (contracted): coming later', '2');
-  soon.disabled = true;
-  gradeIn.add(soon);
-}
-
 const saved = load();
 textIn.value = saved.text;
 cellsIn.value = saved.cells;
 rowsIn.value = saved.rows;
 gradeIn.value = saved.grade;
-if (gradeIn.selectedIndex < 0 || gradeIn.selectedOptions[0]?.disabled) gradeIn.value = '1';
+if (gradeIn.selectedIndex < 0) gradeIn.value = '1';
 form.querySelector<HTMLInputElement>(`input[name="view"][value="${saved.view}"]`)!.checked = true;
 
 const currentView = (): View =>
@@ -84,6 +78,30 @@ function readWholeNumber(input: HTMLInputElement, min: number, max: number, opti
     return { value: undefined, error: `Enter a whole number from ${min} to ${max}.` };
   }
   return { value: n, error: null };
+}
+
+// ---- Grade 2 (loaded on demand) ----
+
+let gradeLoading = false;
+
+async function ensureGrade(grade: Grade): Promise<void> {
+  if (gradeLoading || grade !== 2) return;
+  gradeLoading = true;
+  gradeStatus.textContent = 'Loading Grade 2 rules…';
+  gradeStatus.hidden = false;
+  live.textContent = 'Loading Grade 2 braille rules.';
+  try {
+    const { loadGrade2 } = await import('./grade2-loader');
+    await loadGrade2();
+    gradeStatus.hidden = true;
+  } catch (err) {
+    console.error(err);
+    gradeStatus.textContent = "Couldn't load Grade 2. Showing Grade 1 instead; try again later.";
+    gradeIn.value = '1';
+  } finally {
+    gradeLoading = false;
+  }
+  update();
 }
 
 // ---- Rendering ----
@@ -120,7 +138,12 @@ function update(): void {
   });
   if (cells.value === undefined || cells.value === null || rows.value === undefined) return;
 
-  const translation = translate(textIn.value, Number(gradeIn.value) as Grade);
+  const grade = Number(gradeIn.value) as Grade;
+  if (!hasGrade(grade)) {
+    void ensureGrade(grade);
+    return;
+  }
+  const translation = translate(textIn.value, grade);
   const slate = layout(translation, cells.value, rows.value);
   lastSlate = slate;
 

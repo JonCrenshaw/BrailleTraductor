@@ -4,11 +4,13 @@
 // - Capitals (§8): ⠠ before one capital letter; ⠠⠠ before two or more capitals in a row. Any
 //   non-letter (apostrophe, hyphen, digit…) ends the ⠠⠠ effect. If lowercase letters follow
 //   capitals inside the same run of letters, ⠠⠄ ends capitals first ("CDs" → ⠠⠠⠉⠙⠠⠄⠎).
-//   Three or more fully capitalized words in a row use the passage sign ⠠⠠⠠ … ⠠⠄.
+//   Three or more fully capitalized words in a row use the passage sign ⠠⠠⠠ … ⠠⠄, with the
+//   terminator after the last word's punctuation.
 // - Numbers (§6): ⠼ starts numeric mode; digits 1–0 are the letters a–j. A period or comma
 //   between digits stays in numeric mode. Any other symbol or a space ends it. A lowercase a–j
 //   right after a digit takes the Grade 1 sign ⠰ so it isn't read as a digit.
-// - Punctuation (§7): see symbols.ts. Straight quotes are resolved to opening/closing by position.
+// - Punctuation (§7): see symbols.ts. Straight double quotes are resolved to opening/closing by
+//   position; a straight single quote is always an apostrophe.
 
 import {
   DIGITS,
@@ -160,7 +162,6 @@ interface QuoteState {
 function translateWord(word: string, passage: PassageInfo, quotes: QuoteState): BrailleCell[] {
   const w = new WordWriter();
   const chars = [...word];
-  const lastLetter = chars.findLastIndex(isLetter);
   let numeric = false;
 
   if (passage.start) w.indicator('capitalPassage');
@@ -191,7 +192,6 @@ function translateWord(word: string, passage: PassageInfo, quotes: QuoteState): 
       if (numeric && ch >= 'a' && ch <= 'j') w.indicator('grade1');
       numeric = false;
       writeLetterRun(w, chars.slice(i, j).join(''), passage.inside);
-      if (passage.end && j - 1 === lastLetter) w.indicator('capitalTerminator');
       i = j;
       continue;
     }
@@ -213,8 +213,8 @@ function translateWord(word: string, passage: PassageInfo, quotes: QuoteState): 
     if (ch === '"' || ch === '“' || ch === '”') {
       const opening = ch === '“' || (ch === '"' && !alnumBefore);
       w.symbol(opening ? QUOTES.openDouble : QUOTES.closeDouble, ch);
-    } else if (ch === "'" || ch === '‘' || ch === '’') {
-      if (ch === '‘' || (ch === "'" && !alnumBefore && alnumAfter)) {
+    } else if (ch === '‘' || ch === '’') {
+      if (ch === '‘') {
         quotes.singleOpen = true;
         w.symbol(QUOTES.openSingle, ch);
       } else if (quotes.singleOpen && alnumBefore && !alnumAfter) {
@@ -223,6 +223,10 @@ function translateWord(word: string, passage: PassageInfo, quotes: QuoteState): 
       } else {
         w.symbol(QUOTES.apostrophe, ch);
       }
+    } else if (ch === "'") {
+      // A straight ' is too ambiguous to treat as a quote mark ('em, '90s), so like liblouis we
+      // always write it as an apostrophe. Curly quotes give proper single quotation marks.
+      w.symbol(QUOTES.apostrophe, ch);
     } else {
       // normalize() guarantees anything left is in the punctuation table.
       w.symbol(PUNCTUATION[ch]!, ch);
@@ -230,6 +234,8 @@ function translateWord(word: string, passage: PassageInfo, quotes: QuoteState): 
     i++;
   }
 
+  // The passage terminator follows the whole last word, punctuation included (UEB §8.6).
+  if (passage.end) w.indicator('capitalTerminator');
   return w.cells;
 }
 

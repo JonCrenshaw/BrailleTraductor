@@ -8,8 +8,9 @@ you flip it over.
 
 ## Features
 
-- Unified English Braille (UEB) **Grade 1**: letters, capitals (including capital-word and
-  capital-passage signs), numbers, and punctuation.
+- Unified English Braille (UEB) **Grade 1** (every letter spelled out) or **Grade 2**
+  (contracted, what most braille readers use): letters, contractions, capitals, numbers, and
+  punctuation.
 - **Writing side** view (mirrored, right to left, with a cell ruler counted from the right edge)
   and **reading side** view (the finished page).
 - Word wrapping to your slate's cells per row; optional rows per page.
@@ -27,3 +28,8 @@ npm run check    # typecheck, lint, format, tests with coverage, build
 ```
 
 Pushing to `main` runs the same checks in GitHub Actions and deploys to GitHub Pages.
+
+## Credits
+
+Grade 2 translation uses [liblouis](https://liblouis.io/) (LGPL-2.1), compiled to WebAssembly by
+`scripts/build-liblouis.sh`. See `public/liblouis/README.md`.

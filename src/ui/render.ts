@@ -238,6 +238,9 @@ export function enableTooltip(container: HTMLElement, tooltip: HTMLElement, getV
     shownFor = el;
     tooltip.replaceChildren(tooltipContent(slot, getView()));
     tooltip.hidden = false;
+    place(el);
+  };
+  const place = (el: HTMLElement) => {
     const r = el.getBoundingClientRect();
     const t = tooltip.getBoundingClientRect();
     const margin = 8;
@@ -270,6 +273,11 @@ export function enableTooltip(container: HTMLElement, tooltip: HTMLElement, getV
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') hide();
   });
-  window.addEventListener('scroll', hide, { passive: true });
-  window.addEventListener('resize', hide);
+  // Focusing an off-screen cell scrolls it into view, so follow the cell rather than hiding.
+  // Capture catches the slate's own horizontal scrolling too.
+  const follow = () => {
+    if (shownFor) place(shownFor);
+  };
+  document.addEventListener('scroll', follow, { capture: true, passive: true });
+  window.addEventListener('resize', follow);
 }
