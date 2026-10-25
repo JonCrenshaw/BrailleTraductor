@@ -12,6 +12,16 @@ export interface BrailleCell {
   print: string;
   /** Plain-English meaning, e.g. "letter a", "Capital sign: the next letter is uppercase". */
   name: string;
+  /**
+   * Must stay on the same row as the next cell: indicators, the leading cells of multi-cell
+   * symbols, and the last capital before a capitals terminator.
+   */
+  joinNext?: boolean;
+  /**
+   * The mode this cell was written in, which a row break would interrupt. Layout uses it to
+   * continue the mode on the next row (repeat the capital word sign, or the number continuation).
+   */
+  mode?: 'capitals' | 'numeric';
 }
 
 /** A translated word: everything between two spaces, including attached punctuation. */
