@@ -1,0 +1,27 @@
+# Rebuilds the liblouis WebAssembly bundle in public/liblouis/. Run by hand when upgrading
+# liblouis; download the artifact and commit it. The deploy workflow only serves the committed files.
+name: Build liblouis
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: liblouis release version (without the v)
+        default: '3.39.0'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: emscripten/emsdk:3.1.74
+    steps:
+      - uses: actions/checkout@v7
+      - run: bash scripts/build-liblouis.sh
+        env:
+          LIBLOUIS_VERSION: ${{ inputs.version }}
+      - uses: actions/upload-artifact@v5
+        with:
+          name: liblouis
+          path: public/liblouis
