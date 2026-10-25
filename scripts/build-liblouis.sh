@@ -40,6 +40,7 @@ emcc liblouis/.libs/liblouis.a -O2 \
   -s MODULARIZE=1 -s EXPORT_ES6=1 -s EXPORT_NAME=createLiblouis \
   -s ENVIRONMENT=web,node \
   -s ALLOW_MEMORY_GROWTH=1 \
+  -s STACK_SIZE=4194304 \
   -s EXPORTED_FUNCTIONS='["_lou_translate","_lou_version","_malloc","_free"]' \
   -s EXPORTED_RUNTIME_METHODS='["UTF8ToString","stringToUTF8","lengthBytesUTF8","HEAP32","HEAPU32","HEAPU8"]' \
   --preload-file "$TABLES@/tables"
