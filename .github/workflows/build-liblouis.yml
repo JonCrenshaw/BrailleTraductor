@@ -1,8 +1,10 @@
-# Rebuilds the liblouis WebAssembly bundle in public/liblouis/. Run by hand when upgrading
-# liblouis; download the artifact and commit it. The deploy workflow only serves the committed files.
+# Rebuilds the liblouis WebAssembly bundle in public/liblouis/ when the build script changes (or
+# by hand when upgrading liblouis); download the artifact and commit it. The deploy workflow only serves the committed files.
 name: Build liblouis
 
 on:
+  push:
+    paths: [scripts/build-liblouis.sh, .github/workflows/build-liblouis.yml]
   workflow_dispatch:
     inputs:
       version:
@@ -20,7 +22,7 @@ jobs:
       - uses: actions/checkout@v7
       - run: bash scripts/build-liblouis.sh
         env:
-          LIBLOUIS_VERSION: ${{ inputs.version }}
+          LIBLOUIS_VERSION: ${{ inputs.version || '3.39.0' }}
       - uses: actions/upload-artifact@v5
         with:
           name: liblouis
