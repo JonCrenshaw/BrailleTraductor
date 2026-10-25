@@ -28,12 +28,22 @@ so Claude is responsible for getting the braille right and should explain choice
   (`en-ueb-g2.ctb`) compiled to WebAssembly, rather than hand-writing about 180 contraction rules.
   The cell `name` field must still explain each cell (for example "contraction: the").
 
+## Row breaks (`layout.ts`)
+
+- Words that fit on a row are never divided. Longer words start in the space left on the current
+  row and are divided with a hyphen. If the word already has a hyphen or dash, the break goes after
+  it and nothing is added.
+- Inside a number, the row ends with the continuation sign (dot 5) and the number sign isn't
+  repeated (UEB §6.10). In capital-word mode the capital word sign is repeated on the next row.
+- Translators mark cells with `joinNext` (never break after this cell) and `mode` (capitals or
+  numeric) so layout can do this without knowing braille rules. Grade 2 must set them too.
+
 ## Known simplifications
 
 - Accented letters are written without the accent (with a warning) instead of using UEB accent
   signs.
-- When a word in capital-word mode is split across rows, the capital sign isn't repeated on the
-  next row.
+- Long words are divided wherever they fit best (after an existing hyphen if possible), not at
+  syllable boundaries as a professional transcriber would.
 - A straight `'` is taken as an opening single quote only at the start of a word.
 
 ## Workflow

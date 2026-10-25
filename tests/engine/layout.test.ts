@@ -25,26 +25,6 @@ describe('layout', () => {
     expect(rows('a\n\nb', 4)).toEqual([['⠁···', '····', '⠃···']]);
   });
 
-  it('splits words longer than a row with a hyphen', () => {
-    const result = layout(translate('abcdefghij'), 4);
-    expect(result.pages[0]!.map(show)).toEqual(['⠁⠃⠉⠤', '⠙⠑⠋⠤', '⠛⠓⠊⠚']);
-    expect(result.warnings).toEqual(['"abcdefghij" is longer than a row, so it was split.']);
-  });
-
-  it('continues after a split word on the same row', () => {
-    expect(rows('abcdef hi', 4)).toEqual([['⠁⠃⠉⠤', '⠙⠑⠋·', '⠓⠊··']]);
-    expect(rows('abcde f', 4)).toEqual([['⠁⠃⠉⠤', '⠙⠑·⠋']]);
-  });
-
-  it('never splits a word right after an indicator', () => {
-    // "x⠠⠠ABCDEFG": a plain cut at 3 cells would end the first row on the second ⠠.
-    const result = layout(translate('xABCDEFG'), 4);
-    for (const row of result.pages[0]!) {
-      const used = row.slice(0, usedLength(row));
-      expect(used.at(-1)?.kind).not.toBe('indicator');
-    }
-  });
-
   it('splits rows into pages', () => {
     expect(rows('aaa bbb ccc', 4, 2)).toEqual([['⠁⠁⠁·', '⠃⠃⠃·'], ['⠉⠉⠉·']]);
   });
@@ -57,6 +37,72 @@ describe('layout', () => {
     expect(() => layout(translate('a'), 3)).toThrow();
     expect(() => layout(translate('a'), 10.5)).toThrow();
     expect(() => layout(translate('a'), 10, 0)).toThrow();
+  });
+});
+
+describe('words longer than a row', () => {
+  it('divides them with a hyphen at the end of each row', () => {
+    const result = layout(translate('abcdefghij'), 4);
+    expect(result.pages[0]!.map(show)).toEqual(['⠁⠃⠉⠤', '⠙⠑⠋⠤', '⠛⠓⠊⠚']);
+    expect(result.warnings).toEqual(['"abcdefghij" is longer than a row, so it was divided.']);
+  });
+
+  it('moves a word that fits on a row of its own instead of dividing it', () => {
+    expect(rows('abc defgh', 8)).toEqual([['⠁⠃⠉·····', '⠙⠑⠋⠛⠓···']]);
+  });
+
+  it('starts a long word in the space left on the current row', () => {
+    expect(rows('hi abcdefghijk', 8)).toEqual([['⠓⠊·⠁⠃⠉⠙⠤', '⠑⠋⠛⠓⠊⠚⠅·']]);
+  });
+
+  it('continues on the same row after a divided word', () => {
+    expect(rows('abcdef hi', 4)).toEqual([['⠁⠃⠉⠤', '⠙⠑⠋·', '⠓⠊··']]);
+    expect(rows('abcde f', 4)).toEqual([['⠁⠃⠉⠤', '⠙⠑·⠋']]);
+  });
+
+  it('prefers to divide after a hyphen already in the word, adding nothing', () => {
+    expect(rows('mother-in-law', 10)).toEqual([['⠍⠕⠞⠓⠑⠗⠤⠊⠝⠤', '⠇⠁⠺·······']]);
+  });
+
+  it('leaves at least two characters on each side of a break', () => {
+    expect(rows('Hi CONSTANTINOPLE', 8)).toEqual([
+      ['⠠⠓⠊·····', '⠠⠠⠉⠕⠝⠎⠞⠤', '⠠⠠⠁⠝⠞⠊⠝⠤', '⠠⠠⠕⠏⠇⠑··'],
+    ]);
+  });
+
+  it('repeats the capital word sign after the break', () => {
+    expect(rows('CONSTANTINOPLE', 8)).toEqual([['⠠⠠⠉⠕⠝⠎⠞⠤', '⠠⠠⠁⠝⠞⠊⠝⠤', '⠠⠠⠕⠏⠇⠑··']]);
+  });
+
+  it('does not repeat a single capital sign, which only covers the first letter', () => {
+    expect(rows('Abcdefghij', 6)).toEqual([['⠠⠁⠃⠉⠙⠤', '⠑⠋⠛⠓⠊⠚']]);
+  });
+
+  it('divides a number with the continuation sign and no new number sign (UEB 6.10)', () => {
+    expect(rows('1234567890', 6)).toEqual([['⠼⠁⠃⠉⠙⠐', '⠑⠋⠛⠓⠊⠚']]);
+  });
+
+  it('never separates an indicator or a multi-cell symbol from what follows', () => {
+    const cases: [string, number][] = [
+      ['xABCDEFG', 4],
+      ['abcd(efgh)', 6],
+      ['"Supercalifragilistic!"', 7],
+      ['12345,678.90kg', 5],
+      ['ABCDEFGH IJKLMNOP QRSTUVWX', 6],
+    ];
+    for (const [text, width] of cases) {
+      for (const row of layout(translate(text), width).pages[0]!) {
+        expect(row).toHaveLength(width);
+        const used = row.slice(0, usedLength(row));
+        expect(used.at(-1)?.joinNext ?? false, `${text} @ ${width}`).toBe(false);
+      }
+    }
+  });
+
+  it('still makes progress on the narrowest slate when nothing divides cleanly', () => {
+    const result = layout(translate('ABCDEFGH IJKLMNOP QRSTUVWX'), 4);
+    expect(result.pages[0]!.length).toBeGreaterThan(5);
+    expect(result.pages[0]!.every((r) => r.length === 4)).toBe(true);
   });
 });
 

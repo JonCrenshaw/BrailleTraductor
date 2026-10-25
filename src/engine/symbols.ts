@@ -69,6 +69,10 @@ export const INDICATORS = {
     dots: [dotString('56')],
     name: 'Grade 1 sign: the next cell is a letter, not a digit',
   },
+  numericContinuation: {
+    dots: [dotString('5')],
+    name: 'Continuation sign: the number continues on the next row',
+  },
 } as const;
 
 export type IndicatorKey = keyof typeof INDICATORS;

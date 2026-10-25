@@ -81,24 +81,48 @@ class WordWriter {
 
   indicator(key: IndicatorKey): void {
     const { dots, name } = INDICATORS[key];
-    for (const d of dots) this.cells.push({ dots: d, kind: 'indicator', print: '', name });
+    if (key === 'capitalTerminator') {
+      // The terminator belongs with the capitals before it, not with what follows.
+      const prev = this.cells.at(-1);
+      if (prev) prev.joinNext = true;
+      dots.forEach((d, i) => {
+        const cell: BrailleCell = { dots: d, kind: 'indicator', print: '', name };
+        if (i < dots.length - 1) cell.joinNext = true;
+        this.cells.push(cell);
+      });
+      return;
+    }
+    for (const d of dots) {
+      this.cells.push({ dots: d, kind: 'indicator', print: '', name, joinNext: true });
+    }
   }
 
-  symbol(def: SymbolDef, print: string): void {
+  symbol(def: SymbolDef, print: string, mode?: 'numeric'): void {
     def.dots.forEach((d, i) => {
       const part = def.dots.length > 1 ? ` (cell ${i + 1} of ${def.dots.length})` : '';
-      this.cells.push({ dots: d, kind: 'punctuation', print, name: def.name + part });
+      const cell: BrailleCell = { dots: d, kind: 'punctuation', print, name: def.name + part };
+      if (i < def.dots.length - 1) cell.joinNext = true;
+      if (mode) cell.mode = mode;
+      this.cells.push(cell);
     });
   }
 
-  letter(ch: string): void {
+  letter(ch: string, capitalsWord = false): void {
     const lower = ch.toLowerCase();
     const name = isUpper(ch) ? `letter ${lower} (uppercase ${ch})` : `letter ${lower}`;
-    this.cells.push({ dots: LETTERS[lower]!, kind: 'letter', print: ch, name });
+    const cell: BrailleCell = { dots: LETTERS[lower]!, kind: 'letter', print: ch, name };
+    if (capitalsWord) cell.mode = 'capitals';
+    this.cells.push(cell);
   }
 
   digit(ch: string): void {
-    this.cells.push({ dots: DIGITS[ch]!, kind: 'digit', print: ch, name: `digit ${ch}` });
+    this.cells.push({
+      dots: DIGITS[ch]!,
+      kind: 'digit',
+      print: ch,
+      name: `digit ${ch}`,
+      mode: 'numeric',
+    });
   }
 }
 
@@ -119,7 +143,7 @@ function writeLetterRun(w: WordWriter, run: string, inPassage: boolean): void {
     while (k < run.length && isUpper(run[k]!)) k++;
     if (k - p >= 2) {
       w.indicator('capitalWord');
-      for (let q = p; q < k; q++) w.letter(run[q]!);
+      for (let q = p; q < k; q++) w.letter(run[q]!, true);
       if (k < run.length) w.indicator('capitalTerminator');
     } else {
       w.indicator('capitalLetter');
@@ -155,7 +179,7 @@ function translateWord(word: string, passage: PassageInfo, quotes: QuoteState): 
     }
 
     if (numeric && (ch === '.' || ch === ',') && isDigit(next)) {
-      w.symbol(NUMERIC_PUNCTUATION[ch]!, ch);
+      w.symbol(NUMERIC_PUNCTUATION[ch]!, ch, 'numeric');
       i++;
       continue;
     }
