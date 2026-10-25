@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      name="description"
+      content="Translate English into braille and see it mirrored and laid out for writing with a slate and stylus."
+    />
+    <title>Braille Slate Writer</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 30'%3E%3Ccircle cx='5' cy='5' r='4'/%3E%3Ccircle cx='5' cy='15' r='4'/%3E%3Ccircle cx='15' cy='5' r='4'/%3E%3Ccircle cx='15' cy='25' r='4'/%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <a class="skip-link" href="#output">Skip to the braille output</a>
+    <header class="site-header">
+      <h1>Braille Slate Writer</h1>
+      <p class="tagline">
+        Type a message and get the exact cells to punch with a slate and stylus: mirrored, right to
+        left, and wrapped to your slate.
+      </p>
+    </header>
+
+    <main>
+      <form id="controls" class="controls" novalidate>
+        <div class="field field-text">
+          <label for="text">Message</label>
+          <textarea id="text" name="text" rows="4" spellcheck="true" autocomplete="off"></textarea>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="cells">Cells per row</label>
+            <input
+              id="cells"
+              name="cells"
+              type="number"
+              inputmode="numeric"
+              min="4"
+              max="80"
+              step="1"
+              required
+              aria-describedby="cells-hint cells-error"
+            />
+            <p id="cells-hint" class="hint">Count the cell windows across one row of your slate.</p>
+            <p id="cells-error" class="error" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="rows">Rows per page <span class="optional">(optional)</span></label>
+            <input
+              id="rows"
+              name="rows"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              max="60"
+              step="1"
+              aria-describedby="rows-hint rows-error"
+            />
+            <p id="rows-hint" class="hint">Leave blank for one long page.</p>
+            <p id="rows-error" class="error" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="grade">Braille grade</label>
+            <select id="grade" name="grade" aria-describedby="grade-hint"></select>
+            <p id="grade-hint" class="hint">Grade 1 spells every letter out.</p>
+          </div>
+        </div>
+
+        <fieldset class="view-toggle">
+          <legend>Show</legend>
+          <label>
+            <input type="radio" name="view" value="write" checked />
+            Writing side (mirrored, for the stylus)
+          </label>
+          <label>
+            <input type="radio" name="view" value="read" />
+            Reading side (the finished page)
+          </label>
+        </fieldset>
+      </form>
+
+      <section id="output" class="output" aria-labelledby="output-heading" tabindex="-1">
+        <h2 id="output-heading">Slate</h2>
+        <p id="summary" class="summary"></p>
+        <ul id="warnings" class="warnings" hidden></ul>
+        <div id="pages"></div>
+        <p id="empty" class="empty">Type a message above to see it in braille.</p>
+      </section>
+
+      <section class="unicode" aria-labelledby="unicode-heading">
+        <h2 id="unicode-heading">Braille as text</h2>
+        <p class="hint" id="unicode-hint">
+          The finished page as Unicode braille, readable on a braille display or with a screen
+          reader. Copy it to paste into an email or document.
+        </p>
+        <textarea
+          id="unicode-out"
+          readonly
+          rows="4"
+          aria-describedby="unicode-hint"
+          aria-label="Braille as Unicode text"
+        ></textarea>
+        <button type="button" id="copy">Copy braille text</button>
+      </section>
+
+      <details class="help">
+        <summary>How to use this with a slate and stylus</summary>
+        <ol>
+          <li>
+            Set <strong>Cells per row</strong> (and optionally <strong>Rows per page</strong>) to
+            match your slate.
+          </li>
+          <li>
+            In the <strong>Writing side</strong> view, each row starts at the
+            <strong>right edge</strong> (marked with the row number). Punch the cells from right to
+            left, exactly as drawn.
+          </li>
+          <li>
+            Empty cells on the left of a row are the end of that line: stop and move to the next
+            row. Words are never split unless they are longer than a whole row.
+          </li>
+          <li>
+            Flip the paper over (left to right, like turning a page). The dots now read left to
+            right, with every line starting at the left margin.
+          </li>
+          <li>
+            Hover over or tab to any cell to see what it means and how it looks from the reading
+            side.
+          </li>
+        </ol>
+        <h3>Capitals, numbers and punctuation</h3>
+        <p>
+          This uses Unified English Braille (UEB), the standard in the US, UK, Canada, Australia and
+          elsewhere. Some cells don't stand for a letter but change how the next cells are read:
+        </p>
+        <ul>
+          <li><strong>Capital sign</strong> (dot 6): the next letter is uppercase.</li>
+          <li>
+            <strong>Capital word sign</strong> (dot 6 twice): the rest of the word is uppercase.
+          </li>
+          <li>
+            <strong>Number sign</strong> (dots 3-4-5-6): the following letters a to j are the digits
+            1 to 0.
+          </li>
+        </ul>
+      </details>
+    </main>
+
+    <div id="tooltip" class="tooltip" aria-hidden="true" hidden></div>
+    <p id="live" class="visually-hidden" aria-live="polite" aria-atomic="true"></p>
+
+    <footer class="site-footer">
+      <p>
+        Unified English Braille, Grade 1. Checked against the UEB Rulebook; report mistakes on
+        <a href="https://github.com/JonCrenshaw/BrailleTraductor/issues">GitHub</a>.
+      </p>
+    </footer>
+
+    <script type="module" src="/src/ui/main.ts"></script>
+  </body>
+</html>

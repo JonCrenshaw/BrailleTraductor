@@ -1,0 +1,9 @@
+# Store and check out every text file with LF line endings, on every OS.
+# Stops Windows editors and scripts from flipping docs to CRLF (docs/gotchas.md).
+* text=auto eol=lf
+
+# Binary files: never touch.
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary
