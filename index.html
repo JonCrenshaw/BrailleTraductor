@@ -75,7 +75,7 @@
               Grade 1 spells every letter out. Grade 2 uses contractions, which most braille readers
               expect.
             </p>
-            <p id="grade-status" class="hint" role="status" hidden></p>
+            <p id="grade-status" class="hint" hidden></p>
           </div>
         </div>
 
@@ -95,6 +95,11 @@
       <section id="output" class="output" aria-labelledby="output-heading" tabindex="-1">
         <h2 id="output-heading">Slate</h2>
         <p id="summary" class="summary"></p>
+        <p id="slate-help" class="visually-hidden">
+          Use the arrow keys to move from cell to cell, in the order you punch them. Each cell says
+          what it means and which dots to punch. The Braille as text box below has the whole message
+          as Unicode braille.
+        </p>
         <ul id="warnings" class="warnings" hidden></ul>
         <div id="pages"></div>
         <p id="empty" class="empty">Type a message above to see it in braille.</p>
@@ -116,6 +121,7 @@
         <button type="button" id="copy">Copy braille text</button>
       </section>
 
+      <h2 class="visually-hidden">Help</h2>
       <details class="help">
         <summary>How to use this with a slate and stylus</summary>
         <ol>

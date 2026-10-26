@@ -94,9 +94,11 @@ async function ensureGrade(grade: Grade): Promise<void> {
     const { loadGrade2 } = await import('./grade2-loader');
     await loadGrade2();
     gradeStatus.hidden = true;
+    gradeStatus.textContent = '';
   } catch (err) {
     console.error(err);
     gradeStatus.textContent = "Couldn't load Grade 2. Showing Grade 1 instead; try again later.";
+    live.textContent = gradeStatus.textContent;
     gradeIn.value = '1';
   } finally {
     gradeLoading = false;
@@ -167,7 +169,7 @@ function update(): void {
   summaryEl.textContent = !hasContent
     ? ''
     : currentView() === 'write'
-      ? `${sizeText}. Start each row at the right edge (←) and punch right to left.`
+      ? `${sizeText}. Start each row at its right edge, by the row number, and punch right to left.`
       : `${sizeText}. This is how the page reads after you flip it over.`;
 
   unicodeOut.value = unicodeText(slate);

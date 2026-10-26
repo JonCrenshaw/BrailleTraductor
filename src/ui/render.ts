@@ -2,7 +2,7 @@
 // what layout() returns and wires up keyboard navigation and the hover/focus tooltip.
 
 import { describeDots, mirror, toUnicode, type Dots } from '../engine/cell';
-import { isSpace, toWritingOrder, type Row, type SlateLayout } from '../engine/layout';
+import { isSpace, type Row, type SlateLayout } from '../engine/layout';
 import type { BrailleCell } from '../engine/types';
 
 export type View = 'write' | 'read';
@@ -18,19 +18,17 @@ interface SlotInfo {
 /** What each rendered slot shows, for the tooltip. */
 const slotData = new WeakMap<HTMLElement, SlotInfo>();
 
+/**
+ * Slots in the order they're written, which is also reading order: position 1 first. The writing
+ * side is flipped right to left with CSS (`direction: rtl`), not by reordering the DOM, so screen
+ * readers, arrow keys and column numbers all follow the order you punch the cells.
+ */
 function slotsFor(row: Row, view: View): SlotInfo[] {
-  if (view === 'write') {
-    return toWritingOrder(row).map((s) => ({
-      cell: s.cell,
-      shownDots: s.writeDots,
-      position: s.readingIndex + 1,
-    }));
-  }
-  return row.map((cell, i) => ({
-    cell: isSpace(cell) ? null : cell,
-    shownDots: isSpace(cell) ? 0 : cell!.dots,
-    position: i + 1,
-  }));
+  return row.map((cell, i) => {
+    const filled = isSpace(cell) ? null : cell;
+    const dots = filled ? filled.dots : 0;
+    return { cell: filled, shownDots: view === 'write' ? mirror(dots) : dots, position: i + 1 };
+  });
 }
 
 /** A six-dot cell drawing: dots 1-2-3 down the left column, 4-5-6 down the right. */
@@ -46,23 +44,21 @@ export function cellGraphic(dots: Dots, className = 'cell-graphic'): HTMLElement
   return el;
 }
 
+/** Screen reader label: what the cell is first, then where it is. */
 function cellLabel(slot: SlotInfo, rowNumber: number, width: number, view: View): string {
-  const where =
-    view === 'write'
-      ? `Row ${rowNumber}, cell ${slot.position} of ${width} from the right`
-      : `Row ${rowNumber}, cell ${slot.position} of ${width}`;
-  if (!slot.cell) return `${where}: empty`;
-  return `${where}: ${slot.cell.name}, ${describeDots(slot.cell.dots)}`;
+  const where = `row ${rowNumber}, cell ${slot.position} of ${width}${
+    view === 'write' ? ' from the right' : ''
+  }`;
+  if (!slot.cell) return `Empty. ${where}`;
+  return `${slot.cell.name}, ${describeDots(slot.cell.dots)}. ${where}`;
 }
 
-function ruler(width: number, view: View): HTMLElement {
+function ruler(width: number): HTMLElement {
   const el = document.createElement('div');
   el.className = 'ruler';
   el.setAttribute('aria-hidden', 'true');
   el.append(document.createElement('span'));
-  const positions = Array.from({ length: width }, (_, i) => i + 1);
-  if (view === 'write') positions.reverse();
-  for (const n of positions) {
+  for (let n = 1; n <= width; n++) {
     const tick = document.createElement('span');
     tick.className = 'tick';
     if (n === 1 || n % 5 === 0) tick.textContent = String(n);
@@ -97,7 +93,8 @@ export function renderSlate(container: HTMLElement, slate: SlateLayout, view: Vi
       'aria-label',
       `${pageName}, ${view === 'write' ? 'writing side, mirrored' : 'reading side'}`,
     );
-    grid.append(ruler(slate.cellsPerRow, view));
+    grid.setAttribute('aria-describedby', 'slate-help');
+    grid.append(ruler(slate.cellsPerRow));
 
     for (const row of rows) {
       rowNumber++;
@@ -114,7 +111,7 @@ export function renderSlate(container: HTMLElement, slate: SlateLayout, view: Vi
       endSpacer.className = 'row-num';
       endSpacer.setAttribute('aria-hidden', 'true');
 
-      rowEl.append(view === 'write' ? endSpacer : startLabel);
+      rowEl.append(startLabel);
       for (const slot of slotsFor(row, view)) {
         const cellEl = document.createElement('span');
         cellEl.className = slot.cell ? 'slot' : 'slot empty';
@@ -127,7 +124,7 @@ export function renderSlate(container: HTMLElement, slate: SlateLayout, view: Vi
         slotData.set(cellEl, slot);
         rowEl.append(cellEl);
       }
-      rowEl.append(view === 'write' ? startLabel : endSpacer);
+      rowEl.append(endSpacer);
       grid.append(rowEl);
     }
 
@@ -162,15 +159,17 @@ export function enableGridKeys(container: HTMLElement): void {
     const allRows = [...container.querySelectorAll<HTMLElement>('.slate-row')];
     const rowIndex = allRows.indexOf(row);
     const col = rowCells.indexOf(current);
+    // On the writing side the row runs right to left, so the left arrow moves to the next cell.
+    const step = row.closest('.view-write') ? -1 : 1;
     const cellAt = (r: number, c: number) => allRows[r]?.querySelectorAll<HTMLElement>('.slot')[c];
 
     let target: HTMLElement | null | undefined;
     switch (e.key) {
       case 'ArrowRight':
-        target = rowCells[col + 1];
+        target = rowCells[col + step];
         break;
       case 'ArrowLeft':
-        target = rowCells[col - 1];
+        target = rowCells[col - step];
         break;
       case 'ArrowDown':
         target = cellAt(rowIndex + 1, col);
