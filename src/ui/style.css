@@ -290,6 +290,12 @@ button {
   align-items: center;
 }
 
+.view-write .slate-row,
+.view-write .ruler {
+  /* Cells stay in writing order in the DOM; the writing side just lays them out right to left. */
+  direction: rtl;
+}
+
 .ruler {
   font-size: 0.7rem;
   color: var(--muted);
@@ -298,6 +304,7 @@ button {
 }
 
 .row-num {
+  direction: ltr;
   font-size: 0.85rem;
   color: var(--muted);
   text-align: center;
