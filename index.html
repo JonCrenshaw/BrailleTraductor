@@ -67,8 +67,15 @@
 
           <div class="field">
             <label for="grade">Braille grade</label>
-            <select id="grade" name="grade" aria-describedby="grade-hint"></select>
-            <p id="grade-hint" class="hint">Grade 1 spells every letter out.</p>
+            <select id="grade" name="grade" aria-describedby="grade-hint grade-status">
+              <option value="1">Grade 1 (uncontracted)</option>
+              <option value="2">Grade 2 (contracted)</option>
+            </select>
+            <p id="grade-hint" class="hint">
+              Grade 1 spells every letter out. Grade 2 uses contractions, which most braille readers
+              expect.
+            </p>
+            <p id="grade-status" class="hint" role="status" hidden></p>
           </div>
         </div>
 
@@ -149,6 +156,13 @@
             1 to 0.
           </li>
         </ul>
+        <h3>Grade 1 or Grade 2?</h3>
+        <p>
+          <strong>Grade 1</strong> writes every letter. <strong>Grade 2</strong> uses about 180
+          contractions: common words and letter groups get shorter signs, so "the" is one cell and
+          "knowledge" is just "k". Most adult braille readers use Grade 2, and it's less punching
+          for you. Hover over a contraction to see which letters it stands for.
+        </p>
       </details>
     </main>
 
@@ -157,7 +171,9 @@
 
     <footer class="site-footer">
       <p>
-        Unified English Braille, Grade 1. Checked against the UEB Rulebook; report mistakes on
+        Unified English Braille. Grade 1 is checked against the UEB Rulebook. Grade 2 is translated
+        by <a href="https://liblouis.io/">liblouis</a> (LGPL-2.1,
+        <a href="https://github.com/liblouis/liblouis">source</a>). Report mistakes on
         <a href="https://github.com/JonCrenshaw/BrailleTraductor/issues">GitHub</a>.
       </p>
     </footer>

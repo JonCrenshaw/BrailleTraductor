@@ -7,7 +7,7 @@ import type { Dots } from './cell';
 export interface BrailleCell {
   dots: Dots;
   /** Indicators modify the cells after them, so a line break must never fall right after one. */
-  kind: 'letter' | 'digit' | 'punctuation' | 'indicator';
+  kind: 'letter' | 'digit' | 'punctuation' | 'indicator' | 'contraction';
   /** The print text this cell came from (e.g. "a", "?", "4"); '' for indicators and spaces. */
   print: string;
   /** Plain-English meaning, e.g. "letter a", "Capital sign: the next letter is uppercase". */

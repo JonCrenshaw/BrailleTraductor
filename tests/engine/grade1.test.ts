@@ -36,7 +36,8 @@ describe('capitals', () => {
   });
 
   it('uses a capitals passage for three or more capitalized words', () => {
-    expect(brl('HAPPY BIRTHDAY TO YOU!')).toBe('⠠⠠⠠⠓⠁⠏⠏⠽ ⠃⠊⠗⠞⠓⠙⠁⠽ ⠞⠕ ⠽⠕⠥⠠⠄⠖');
+    // The terminator goes after the last word, punctuation included.
+    expect(brl('HAPPY BIRTHDAY TO YOU!')).toBe('⠠⠠⠠⠓⠁⠏⠏⠽ ⠃⠊⠗⠞⠓⠙⠁⠽ ⠞⠕ ⠽⠕⠥⠖⠠⠄');
   });
 
   it('uses word indicators for only two capitalized words', () => {
@@ -73,7 +74,9 @@ describe('punctuation', () => {
     ['don’t', '⠙⠕⠝⠄⠞'],
     ['"Hi," she said.', '⠦⠠⠓⠊⠂⠴ ⠎⠓⠑ ⠎⠁⠊⠙⠲'],
     ['“Hi”', '⠦⠠⠓⠊⠴'],
-    ["'yes'", '⠠⠦⠽⠑⠎⠠⠴'],
+    // Straight single quotes are apostrophes; curly ones are quotation marks.
+    ["'yes'", '⠄⠽⠑⠎⠄'],
+    ["'90s", '⠄⠼⠊⠚⠎'],
     ['‘no’', '⠠⠦⠝⠕⠠⠴'],
     ["the dogs' bowls", '⠞⠓⠑ ⠙⠕⠛⠎⠄ ⠃⠕⠺⠇⠎'],
     ['(wow)', '⠐⠣⠺⠕⠺⠐⠜'],
@@ -81,7 +84,8 @@ describe('punctuation', () => {
     ['wait...', '⠺⠁⠊⠞⠲⠲⠲'],
     ['wait…', '⠺⠁⠊⠞⠲⠲⠲'],
     ['yes--no', '⠽⠑⠎⠠⠤⠝⠕'],
-    ['yes—no', '⠽⠑⠎⠐⠠⠤⠝⠕'],
+    ['yes—no', '⠽⠑⠎⠠⠤⠝⠕'],
+    ['yes⸺no', '⠽⠑⠎⠐⠠⠤⠝⠕'],
     ['and/or', '⠁⠝⠙⠸⠌⠕⠗'],
     ['me@x', '⠍⠑⠈⠁⠭'],
     ['$5', '⠈⠎⠼⠑'],
